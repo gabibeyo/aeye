@@ -40,7 +40,7 @@ Pull requests are the best way to propose changes to the codebase. We actively w
 
 ## Reporting Bugs
 
-We use GitHub issues to track public bugs. Report a bug by [opening a new issue](https://github.com/yourusername/aeye/issues).
+We use GitHub issues to track public bugs. Report a bug by [opening a new issue](https://github.com/gabibeyo/aeye/issues).
 
 **Great Bug Reports** tend to have:
 
@@ -69,7 +69,7 @@ By contributing, you agree that your contributions will be licensed under the MI
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/aeye.git
+   git clone https://github.com/gabibeyo/aeye.git
    cd aeye
    ```
 

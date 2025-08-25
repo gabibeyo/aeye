@@ -223,5 +223,5 @@ kill $MONITOR_PID
 For additional help:
 
 - Check the [Installation Guide](INSTALLATION.md)
-- Review [common issues](https://github.com/yourusername/aeye/issues)
-- Join the [community discussions](https://github.com/yourusername/aeye/discussions)
+- Review [common issues](https://github.com/gabibeyo/aeye/issues)
+- Join the [community discussions](https://github.com/gabibeyo/aeye/discussions)

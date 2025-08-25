@@ -19,14 +19,14 @@ This guide provides detailed instructions for installing Aeye on different platf
 
 ```bash
 # Download and run the install script
-curl -fsSL https://raw.githubusercontent.com/yourusername/aeye/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/gabibeyo/aeye/main/scripts/install.sh | bash
 ```
 
 ### Method 2: Manual Installation
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/aeye.git
+   git clone https://github.com/gabibeyo/aeye.git
    cd aeye
    ```
 
@@ -57,7 +57,7 @@ curl -fsSL https://raw.githubusercontent.com/yourusername/aeye/main/scripts/inst
 
 ```bash
 # This will be available once the formula is published
-brew tap yourusername/aeye
+brew tap gabibeyo/aeye
 brew install aeye
 ```
 
@@ -171,8 +171,8 @@ rm -rf ~/.aeye
 If you encounter issues:
 
 1. Check the [Troubleshooting section](#troubleshooting)
-2. Search [existing issues](https://github.com/yourusername/aeye/issues)
-3. Create a [new issue](https://github.com/yourusername/aeye/issues/new) with:
+2. Search [existing issues](https://github.com/gabibeyo/aeye/issues)
+3. Create a [new issue](https://github.com/gabibeyo/aeye/issues/new) with:
    - Your operating system and version
    - Command you ran
    - Complete error message

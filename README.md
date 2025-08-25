@@ -17,7 +17,7 @@ A sophisticated real-time monitoring tool for Claude AI interactions, providing 
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/aeye.git
+git clone https://github.com/gabibeyo/aeye.git
 cd aeye
 
 # Make the script executable
@@ -37,16 +37,15 @@ chmod +x claude-monitor-enhanced.sh
 
 - **macOS** (Linux support coming soon)
 - **jq** - JSON processor (`brew install jq`)
-- **yq** - YAML processor (optional, for YAML config support: `brew install yq`)
+- **yq** - YAML processor (required for configuration: `brew install yq`)
 - **Claude Desktop** - The tool monitors Claude Desktop application logs
 
 ## ⚙️ Configuration
 
-Aeye supports flexible configuration via YAML or .conf files. Configuration files are automatically detected:
+Aeye uses YAML configuration files for all settings. Configuration files are automatically detected:
 
-1. `--config` command line argument (highest priority)
-2. `config/monitor.yaml` (preferred format)
-3. `config/monitor.conf` (fallback format)
+1. `--config path/to/config.yaml` (command line argument)
+2. `config/monitor.yaml` (auto-detected default)
 
 ### Configuration Options
 
@@ -82,7 +81,7 @@ monitoring:
 ./src/claude-monitor-enhanced.sh
 
 # Use custom configuration file
-./src/claude-monitor-enhanced.sh --config config/monitor.yaml
+./src/claude-monitor-enhanced.sh --config path/to/custom.yaml
 
 # Monitor with time filter
 ./src/claude-monitor-enhanced.sh "2 hours ago"
@@ -138,7 +137,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🐛 Issues & Support
 
-Found a bug or have a feature request? Please [open an issue](https://github.com/yourusername/aeye/issues).
+Found a bug or have a feature request? Please [open an issue](https://github.com/gabibeyo/aeye/issues).
 
 ## 🔮 Roadmap
 

@@ -20,44 +20,38 @@ SHUTDOWN_TIMEOUT=2
 ENABLE_DATA_OBFUSCATION=true
 DEFAULT_HISTORY_FILTER="24 hours ago"
 
-# Function to load configuration
+# Function to load YAML configuration
 load_config() {
     local config_file="$1"
     
     if [[ -f "$config_file" ]]; then
-        log_event "$CYAN" "⚙️" "Config" "Loading configuration from: $config_file"
+        log_event "$CYAN" "⚙️" "Config" "Loading YAML configuration from: $config_file"
         
-        # Source the configuration file if it's a .conf file
-        if [[ "$config_file" == *.conf ]]; then
-            source "$config_file"
-            log_event "$GREEN" "✅" "Config" "Configuration loaded successfully"
-        elif [[ "$config_file" == *.yaml ]] || [[ "$config_file" == *.yml ]]; then
-            # Parse YAML using yq if available, otherwise skip
-            if command -v yq &> /dev/null; then
-                # Load key configuration values from YAML
-                CLAUDE_PROJECTS_DIR=$(yq eval '.paths.claude_projects_dir // env(HOME) + "/.claude/projects"' "$config_file")
-                CLAUDE_CONFIG_FILE=$(yq eval '.paths.claude_config_file // env(HOME) + "/.claude.json"' "$config_file")
-                MCP_CACHE_DIR=$(yq eval '.paths.mcp_cache_dir // env(HOME) + "/Library/Caches/claude-cli-nodejs"' "$config_file")
-                CLAUDE_JSON_CHECK_INTERVAL=$(yq eval '.timing.claude_json_check_interval // 3' "$config_file")
-                NEW_CONVERSATIONS_CHECK_INTERVAL=$(yq eval '.timing.new_conversations_check_interval // 5' "$config_file")
-                STATS_UPDATE_INTERVAL=$(yq eval '.timing.stats_update_interval // 60' "$config_file")
-                MAIN_HEALTH_CHECK_INTERVAL=$(yq eval '.timing.main_health_check_interval // 5' "$config_file")
-                HEALTH_LOG_INTERVAL_MINUTES=$(yq eval '.timing.health_log_interval_minutes // 2' "$config_file")
-                SHUTDOWN_TIMEOUT=$(yq eval '.timing.shutdown_timeout // 2' "$config_file")
-                ENABLE_DATA_OBFUSCATION=$(yq eval '.security.enable_data_obfuscation // true' "$config_file")
-                DEFAULT_HISTORY_FILTER=$(yq eval '.display.default_history_filter // "24 hours ago"' "$config_file")
-                
-                log_event "$GREEN" "✅" "Config" "YAML configuration loaded successfully"
-            else
-                log_event "$YELLOW" "⚠️" "Config" "yq not found, using default values for YAML config"
-            fi
+        # Parse YAML using yq
+        if command -v yq &> /dev/null; then
+            # Load configuration values from YAML with defaults
+            CLAUDE_PROJECTS_DIR=$(yq eval '.paths.claude_projects_dir // env(HOME) + "/.claude/projects"' "$config_file")
+            CLAUDE_CONFIG_FILE=$(yq eval '.paths.claude_config_file // env(HOME) + "/.claude.json"' "$config_file")
+            MCP_CACHE_DIR=$(yq eval '.paths.mcp_cache_dir // env(HOME) + "/Library/Caches/claude-cli-nodejs"' "$config_file")
+            CLAUDE_JSON_CHECK_INTERVAL=$(yq eval '.timing.claude_json_check_interval // 3' "$config_file")
+            NEW_CONVERSATIONS_CHECK_INTERVAL=$(yq eval '.timing.new_conversations_check_interval // 5' "$config_file")
+            STATS_UPDATE_INTERVAL=$(yq eval '.timing.stats_update_interval // 60' "$config_file")
+            MAIN_HEALTH_CHECK_INTERVAL=$(yq eval '.timing.main_health_check_interval // 5' "$config_file")
+            HEALTH_LOG_INTERVAL_MINUTES=$(yq eval '.timing.health_log_interval_minutes // 2' "$config_file")
+            SHUTDOWN_TIMEOUT=$(yq eval '.timing.shutdown_timeout // 2' "$config_file")
+            ENABLE_DATA_OBFUSCATION=$(yq eval '.security.enable_data_obfuscation // true' "$config_file")
+            DEFAULT_HISTORY_FILTER=$(yq eval '.display.default_history_filter // "24 hours ago"' "$config_file")
+            
+            # Expand environment variables in paths
+            CLAUDE_PROJECTS_DIR=$(eval echo "$CLAUDE_PROJECTS_DIR")
+            CLAUDE_CONFIG_FILE=$(eval echo "$CLAUDE_CONFIG_FILE")
+            MCP_CACHE_DIR=$(eval echo "$MCP_CACHE_DIR")
+            
+            log_event "$GREEN" "✅" "Config" "YAML configuration loaded successfully"
+        else
+            log_event "$RED" "❌" "Config" "yq not found! Install with: brew install yq"
+            log_event "$YELLOW" "⚠️" "Config" "Using default configuration values"
         fi
-        
-        # Expand environment variables in paths
-        CLAUDE_PROJECTS_DIR=$(eval echo "$CLAUDE_PROJECTS_DIR")
-        CLAUDE_CONFIG_FILE=$(eval echo "$CLAUDE_CONFIG_FILE")
-        MCP_CACHE_DIR=$(eval echo "$MCP_CACHE_DIR")
-        
     else
         log_event "$YELLOW" "⚠️" "Config" "Configuration file not found: $config_file, using defaults"
     fi
@@ -548,14 +542,12 @@ main() {
     # Load configuration first
     local config_file=""
     
-    # Check for configuration file argument or use defaults
+    # Check for configuration file argument or use default YAML
     if [[ "$1" == "--config" && -n "$2" ]]; then
         config_file="$2"
         shift 2
     elif [[ -f "$(dirname "${BASH_SOURCE[0]}")/../config/monitor.yaml" ]]; then
         config_file="$(dirname "${BASH_SOURCE[0]}")/../config/monitor.yaml"
-    elif [[ -f "$(dirname "${BASH_SOURCE[0]}")/../config/monitor.conf" ]]; then
-        config_file="$(dirname "${BASH_SOURCE[0]}")/../config/monitor.conf"
     fi
     
     if [[ -n "$config_file" ]]; then
@@ -566,6 +558,13 @@ main() {
     if ! command -v jq &> /dev/null; then
         echo -e "${RED}Error: jq is required but not installed. Install with: brew install jq${NC}"
         exit 1
+    fi
+    
+    # Check for yq if config file provided but not installed
+    if [[ -n "$config_file" ]] && ! command -v yq &> /dev/null; then
+        echo -e "${YELLOW}Warning: yq not found. Install with: brew install yq${NC}"
+        echo -e "${YELLOW}Using default configuration values...${NC}"
+        sleep 2
     fi
     
     # BULLETPROOF signal handling - ONLY these signals, NO EXIT
