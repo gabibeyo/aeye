@@ -1,0 +1,72 @@
+# Aeye .gitignore
+
+# Log files and outputs
+*.log
+ai-activity.txt
+test-output/
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS specific files
+.DS_Store
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
+
+# Backup files
+*.bak
+*.backup
+*.orig
+
+# Test artifacts
+coverage/
+test-results/
+*.coverage
+
+# Build artifacts
+dist/
+build/
+*.deb
+*.rpm
+*.pkg
+
+# Configuration files with secrets
+config/secrets.yaml
+.env
+.env.local
+
+# User-specific files
+.aeye/user-config.yaml
+
+# Dependencies
+node_modules/
+vendor/
+
+# Runtime files
+*.pid
+*.lock
+
+# Archives
+*.zip
+*.tar.gz
+*.tgz
+*.rar
+
+# Logs directory
+logs/
+
+# Cache directories
+.cache/
+tmp/
