@@ -11,6 +11,7 @@ This guide provides detailed instructions for installing Aeye on different platf
 
 ### Dependencies
 - **jq** - JSON processor for parsing log files
+- **yq** - YAML processor for configuration files (required)
 - **bash** - Version 4.0 or later
 
 ## Installation Methods
@@ -33,15 +34,16 @@ curl -fsSL https://raw.githubusercontent.com/gabibeyo/aeye/main/scripts/install.
 2. **Install dependencies**
    ```bash
    # macOS with Homebrew
-   brew install jq
+   brew install jq yq
    
    # Verify installation
    jq --version
+   yq --version
    ```
 
 3. **Make script executable**
    ```bash
-   chmod +x src/claude-monitor-enhanced.sh
+   chmod +x src/claude-monitor.sh
    ```
 
 4. **Add to PATH (optional)**
@@ -50,7 +52,7 @@ curl -fsSL https://raw.githubusercontent.com/gabibeyo/aeye/main/scripts/install.
    export PATH="$PATH:/path/to/aeye/src"
    
    # Or create a symlink
-   ln -s /path/to/aeye/src/claude-monitor-enhanced.sh /usr/local/bin/aeye
+   ln -s /path/to/aeye/src/claude-monitor.sh /usr/local/bin/aeye
    ```
 
 ### Method 3: Homebrew (Coming Soon)
@@ -67,10 +69,10 @@ Test your installation:
 
 ```bash
 # Run the help command
-./src/claude-monitor-enhanced.sh --help
+./src/claude-monitor.sh --help
 
 # Run a quick test
-./src/claude-monitor-enhanced.sh live
+./src/claude-monitor.sh live
 ```
 
 You should see the monitoring interface start up with colorful output.
@@ -83,39 +85,39 @@ Aeye monitors these default locations:
 - **MCP logs**: `~/Library/Caches/claude-cli-nodejs/`
 - **Configuration**: `~/.claude.json`
 
-### Custom Configuration
-Create a configuration file at `~/.aeye/config.yaml`:
+### Configuration
 
-```yaml
-# Example configuration (coming in v2.0)
-paths:
-  claude_projects: "~/.claude/projects"
-  mcp_logs: "~/Library/Caches/claude-cli-nodejs"
-  
-monitoring:
-  default_history: "24 hours ago"
-  refresh_interval: 1
-  
-privacy:
-  obfuscate_emails: true
-  obfuscate_paths: true
-  obfuscate_keys: true
+Aeye uses YAML configuration files. The default configuration is in `config/monitor.yaml`.
+
+To create a custom configuration:
+
+```bash
+# Copy the default config
+cp config/monitor.yaml ~/.aeye-config.yaml
+
+# Edit your custom configuration
+vim ~/.aeye-config.yaml
+
+# Use your custom config
+./src/claude-monitor.sh --config ~/.aeye-config.yaml
 ```
+
+See the [Configuration Example](README.md#configuration-example) for available options.
 
 ## Troubleshooting
 
 ### Common Issues
 
-**1. "jq: command not found"**
+**1. "jq: command not found" or "yq: command not found"**
 ```bash
-# Install jq
-brew install jq
+# Install required dependencies
+brew install jq yq
 ```
 
 **2. "Permission denied"**
 ```bash
 # Make the script executable
-chmod +x src/claude-monitor-enhanced.sh
+chmod +x src/claude-monitor.sh
 ```
 
 **3. "No conversation logs found"**
@@ -133,7 +135,7 @@ pkill -f "claude-monitor"
 Run with debug output:
 ```bash
 # Enable bash debugging
-bash -x src/claude-monitor-enhanced.sh
+bash -x src/claude-monitor.sh
 ```
 
 ## Platform-Specific Notes
@@ -176,4 +178,4 @@ If you encounter issues:
    - Your operating system and version
    - Command you ran
    - Complete error message
-   - Output of `jq --version`
+   - Output of `jq --version` and `yq --version`

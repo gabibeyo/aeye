@@ -85,7 +85,7 @@ By contributing, you agree that your contributions will be licensed under the MI
 
 4. **Start development**
    ```bash
-   ./src/claude-monitor-enhanced.sh
+   ./src/claude-monitor.sh
    ```
 
 ## Code of Conduct

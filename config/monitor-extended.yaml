@@ -1,0 +1,191 @@
+# Enhanced Claude Activity Monitor Configuration - Extended Monitoring
+# This configuration includes additional monitoring targets discovered through research
+
+# Path configurations - Core (existing)
+paths:
+  claude_projects_dir: "$HOME/.claude/projects"
+  claude_config_file: "$HOME/.claude.json"
+  mcp_cache_dir: "$HOME/Library/Caches/claude-cli-nodejs"
+  temp_dir: "/tmp"
+
+# Additional monitoring paths (new discoveries)
+additional_paths:
+  # Claude Desktop Application Support
+  claude_app_support: "$HOME/Library/Application Support/Claude"
+  claude_desktop_config: "$HOME/Library/Application Support/Claude/claude_desktop_config.json"
+  claude_app_config: "$HOME/Library/Application Support/Claude/config.json" 
+  claude_window_state: "$HOME/Library/Application Support/Claude/window-state.json"
+  claude_extensions: "$HOME/Library/Application Support/Claude/extensions-installations.json"
+  claude_sentry_logs: "$HOME/Library/Application Support/Claude/sentry"
+  
+  # Cache and Storage
+  claude_desktop_cache: "$HOME/Library/Caches/com.anthropic.claudefordesktop"
+  claude_preferences: "$HOME/Library/Preferences/com.anthropic.claudefordesktop.plist"
+  claude_http_storage: "$HOME/Library/HTTPStorages/com.anthropic.claudefordesktop"
+  
+  # Database storage
+  claude_indexed_db: "$HOME/Library/Application Support/Claude/IndexedDB"
+  claude_local_storage: "$HOME/Library/Application Support/Claude/Local Storage"
+
+# Extended monitoring components
+extended_monitoring:
+  desktop_config_changes: true      # Monitor claude_desktop_config.json
+  app_config_changes: true          # Monitor config.json
+  window_state_changes: false       # Monitor UI state (can be noisy)
+  extension_activity: true          # Monitor extension installations
+  error_logs: true                  # Monitor sentry error logs
+  preferences_changes: true         # Monitor system preferences
+  cache_activity: false             # Monitor cache (very noisy)
+  storage_changes: false            # Monitor storage (can be large)
+
+# File monitoring settings
+file_monitoring:
+  config_files:
+    - path: "$HOME/Library/Application Support/Claude/claude_desktop_config.json"
+      type: "json"
+      label: "Desktop Config"
+      icon: "⚙️"
+      color: "cyan"
+    - path: "$HOME/Library/Application Support/Claude/config.json"
+      type: "json" 
+      label: "App Config"
+      icon: "🔧"
+      color: "blue"
+    - path: "$HOME/Library/Application Support/Claude/extensions-installations.json"
+      type: "json"
+      label: "Extensions"
+      icon: "🧩"
+      color: "purple"
+  
+  log_directories:
+    - path: "$HOME/Library/Application Support/Claude/sentry"
+      pattern: "*.log"
+      label: "Error Logs"
+      icon: "🚨"
+      color: "red"
+
+# macOS system integration
+macos_integration:
+  use_system_logs: false            # Use macOS log command (requires admin)
+  monitor_preferences: true         # Monitor .plist changes
+  console_integration: false        # Integrate with Console.app logs
+
+# Performance considerations for extended monitoring
+extended_performance:
+  max_monitored_files: 50          # Limit concurrent file monitoring
+  skip_large_files_mb: 100         # Skip files larger than 100MB
+  check_file_sizes: true           # Check file sizes before monitoring
+  
+# Security for additional paths
+extended_security:
+  obfuscate_paths_in_additional: true
+  sensitive_file_patterns:
+    - "*.plist"                    # Preference files
+    - "Cookies*"                   # Cookie files
+    - "*Persistent State"          # State files
+
+# Timing configurations (same as base)
+timing:
+  claude_json_check_interval: 3
+  new_conversations_check_interval: 5
+  stats_update_interval: 60
+  main_health_check_interval: 5
+  health_log_interval_minutes: 2
+  shutdown_timeout: 2
+  # Additional for extended monitoring
+  config_file_check_interval: 10   # Check config files every 10 seconds
+  extension_check_interval: 30     # Check extensions every 30 seconds
+
+# Display configurations  
+display:
+  max_message_length: 0
+  default_history_filter: "24 hours ago"
+  show_full_text: true
+  # Extended display options
+  show_file_sizes: false
+  show_modification_times: true
+  group_by_file_type: true
+
+# Monitoring components (extended)
+monitoring:
+  conversation_logs: true
+  mcp_servers: true
+  config_changes: true
+  statistics: true
+  new_files: true
+  health_checks: true
+  # Extended monitoring
+  desktop_app_monitoring: true
+  preference_monitoring: true
+  extension_monitoring: true
+  error_log_monitoring: true
+
+# Security settings (same as base)
+security:
+  enable_data_obfuscation: true
+  obfuscate:
+    api_keys: true
+    aws_keys: true
+    usernames: true
+    passwords: true
+    emails: true
+    ip_addresses: true
+  custom_username_to_obfuscate: ""
+
+# Logging settings (extended)
+logging:
+  log_health_checks: true
+  log_process_tracking: true
+  log_cleanup_details: true
+  log_file_monitoring: true        # Log file monitoring events
+  log_extension_activity: true     # Log extension changes
+  cleanup_patterns:
+    tail_claude: "tail -f.*claude"
+    tail_mcp: "tail -f.*mcp-logs"
+    monitor_process: "claude-monitor"
+
+# Performance settings (extended)
+performance:
+  max_background_processes: 150    # Increased for additional monitoring
+  enable_process_health_monitoring: true
+  recent_sessions_filter: "1 hour ago"
+  file_monitoring_threads: 10      # Threads for file monitoring
+
+# Feature flags (extended)
+features:
+  todo_detection: true
+  tool_usage_tracking: true
+  token_usage_tracking: true
+  model_tracking: true
+  session_summaries: true
+  color_output: true
+  # Extended features
+  file_change_detection: true
+  extension_tracking: true
+  error_aggregation: true
+  config_diff_tracking: true
+
+# Statistics collection (extended)
+statistics:
+  collect_conversation_count: true
+  collect_mcp_logs_count: true
+  collect_active_projects: true
+  collect_recent_sessions: true
+  # Extended statistics
+  collect_config_changes: true
+  collect_extension_count: true
+  collect_error_counts: true
+  collect_cache_size: false        # Can be expensive
+
+# Color customization (same as base)
+colors:
+  red: '\033[0;31m'
+  green: '\033[0;32m'
+  yellow: '\033[1;33m'
+  blue: '\033[0;34m'
+  purple: '\033[0;35m'
+  cyan: '\033[0;36m'
+  white: '\033[1;37m'
+  gray: '\033[0;90m'
+  bold: '\033[1m'
+  nc: '\033[0m'

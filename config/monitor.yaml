@@ -52,7 +52,7 @@ logging:
   cleanup_patterns:
     tail_claude: "tail -f.*claude"
     tail_mcp: "tail -f.*mcp-logs"
-    monitor_process: "claude-monitor-enhanced"
+    monitor_process: "claude-monitor"
 
 # Performance settings
 performance:

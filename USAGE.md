@@ -8,13 +8,13 @@ This guide covers all the features and usage patterns of Aeye.
 
 ```bash
 # Default monitoring (last 24 hours + live)
-./src/claude-monitor-enhanced.sh
+./src/claude-monitor.sh
 
 # Live monitoring only (no historical data)
-./src/claude-monitor-enhanced.sh live
+./src/claude-monitor.sh live
 
 # Monitor all historical data
-./src/claude-monitor-enhanced.sh all
+./src/claude-monitor.sh all
 ```
 
 ### Time Filters
@@ -23,17 +23,17 @@ Aeye supports flexible time filtering for historical data:
 
 ```bash
 # Relative time
-./src/claude-monitor-enhanced.sh "3 days ago"
-./src/claude-monitor-enhanced.sh "1 week ago"
-./src/claude-monitor-enhanced.sh "2 hours ago"
+./src/claude-monitor.sh "3 days ago"
+./src/claude-monitor.sh "1 week ago"
+./src/claude-monitor.sh "2 hours ago"
 
 # Specific dates
-./src/claude-monitor-enhanced.sh "2025-01-01"
-./src/claude-monitor-enhanced.sh "2025-01-15 14:30"
+./src/claude-monitor.sh "2025-01-01"
+./src/claude-monitor.sh "2025-01-15 14:30"
 
 # Date ranges (coming soon)
-./src/claude-monitor-enhanced.sh "last week"
-./src/claude-monitor-enhanced.sh "this month"
+./src/claude-monitor.sh "last week"
+./src/claude-monitor.sh "this month"
 ```
 
 ## Understanding the Output
@@ -62,6 +62,27 @@ Each event includes a session identifier (e.g., `a1b2c3d4`) that helps track whi
 ### Timestamps
 
 All events include precise timestamps in `HH:MM:SS` format for accurate tracking.
+
+## Configuration
+
+### Using Custom Configuration
+
+```bash
+# Use a custom YAML config file
+./src/claude-monitor.sh --config /path/to/custom.yaml
+
+# Validate your configuration
+yq eval '.' config/monitor.yaml
+```
+
+### Configuration Options
+
+Key configuration sections in `monitor.yaml`:
+- **paths**: Claude directories and file locations
+- **timing**: Monitoring intervals and timeouts
+- **security**: Data obfuscation settings
+- **monitoring**: Enable/disable specific components
+- **colors**: Terminal color customization
 
 ## Advanced Features
 
@@ -100,7 +121,7 @@ Aeye can monitor multiple Claude sessions running simultaneously, with each sess
 
 ```bash
 # Start monitoring for a coding session
-./src/claude-monitor-enhanced.sh live
+./src/claude-monitor.sh live
 ```
 
 Sample output:
@@ -116,7 +137,7 @@ Sample output:
 
 ```bash
 # Review yesterday's activities
-./src/claude-monitor-enhanced.sh "1 day ago"
+./src/claude-monitor.sh "1 day ago"
 ```
 
 ### Example 3: Todo Tracking
@@ -136,10 +157,10 @@ If you have extensive conversation history:
 
 ```bash
 # Use live mode to avoid loading large histories
-./src/claude-monitor-enhanced.sh live
+./src/claude-monitor.sh live
 
 # Or limit to recent data
-./src/claude-monitor-enhanced.sh "12 hours ago"
+./src/claude-monitor.sh "12 hours ago"
 ```
 
 ### Memory Usage
@@ -171,7 +192,7 @@ The tool is designed to be lightweight, but for very active sessions:
 
 1. **Check Claude is running**: Ensure Claude Desktop is active
 2. **Verify log locations**: `ls ~/.claude/projects/`
-3. **Test with live mode**: `./src/claude-monitor-enhanced.sh live`
+3. **Test with live mode**: `./src/claude-monitor.sh live`
 
 ### Performance Issues
 
@@ -183,7 +204,8 @@ The tool is designed to be lightweight, but for very active sessions:
 
 1. **Delayed logs**: Some events may appear with slight delays
 2. **File permissions**: Ensure read access to Claude directories
-3. **jq dependency**: Verify `jq --version` works
+3. **Dependencies**: Verify `jq --version` and `yq --version` work
+4. **Configuration**: Ensure YAML config is valid with `yq eval '.' config/monitor.yaml`
 
 ## Best Practices
 
@@ -191,7 +213,8 @@ The tool is designed to be lightweight, but for very active sessions:
 2. **Use time filters** for large conversation histories
 3. **Clean exit** with Ctrl+C to avoid orphaned processes
 4. **Regular cleanup** if you encounter stuck processes
-5. **Check dependencies** if output seems incomplete
+5. **Check dependencies** if output seems incomplete (`jq`, `yq`)
+6. **Validate YAML config** with `yq eval '.' config/monitor.yaml`
 
 ## Integration
 
@@ -199,7 +222,7 @@ The tool is designed to be lightweight, but for very active sessions:
 
 ```bash
 # Monitor while coding
-./src/claude-monitor-enhanced.sh live &
+./src/claude-monitor.sh live &
 # Continue your development work
 ```
 
@@ -208,7 +231,7 @@ The tool is designed to be lightweight, but for very active sessions:
 ```bash
 #!/bin/bash
 # Start monitoring before running your workflow
-./src/claude-monitor-enhanced.sh live &
+./src/claude-monitor.sh live &
 MONITOR_PID=$!
 
 # Your workflow here

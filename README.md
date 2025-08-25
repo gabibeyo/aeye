@@ -21,16 +21,16 @@ git clone https://github.com/gabibeyo/aeye.git
 cd aeye
 
 # Make the script executable
-chmod +x claude-monitor-enhanced.sh
+chmod +x claude-monitor.sh
 
 # Run with default settings (last 24 hours)
-./claude-monitor-enhanced.sh
+./claude-monitor.sh
 
 # Run with custom time filter
-./claude-monitor-enhanced.sh "3 days ago"
+./claude-monitor.sh "3 days ago"
 
 # Live monitoring only (no historical data)
-./claude-monitor-enhanced.sh live
+./claude-monitor.sh live
 ```
 
 ## 📋 Requirements
@@ -47,16 +47,24 @@ Aeye uses YAML configuration files for all settings. Configuration files are aut
 1. `--config path/to/config.yaml` (command line argument)
 2. `config/monitor.yaml` (auto-detected default)
 
-### Configuration Options
+### Configuration Example
+
+The `config/monitor.yaml` file contains all settings:
 
 ```yaml
+# Path configurations
+paths:
+  claude_projects_dir: "$HOME/.claude/projects"
+  claude_config_file: "$HOME/.claude.json"
+  mcp_cache_dir: "$HOME/Library/Caches/claude-cli-nodejs"
+
 # Timing settings (seconds)
 timing:
-  claude_json_check_interval: 3    # Check claude.json changes
-  new_conversations_check_interval: 5    # Check for new conversations
-  stats_update_interval: 60        # Update statistics
-  main_health_check_interval: 5    # Health check frequency
-  
+  claude_json_check_interval: 3
+  new_conversations_check_interval: 5
+  stats_update_interval: 60
+  main_health_check_interval: 5
+
 # Security settings
 security:
   enable_data_obfuscation: true
@@ -65,32 +73,32 @@ security:
     passwords: true
     emails: true
     ip_addresses: true
-    
-# Feature toggles
+
+# Monitoring components
 monitoring:
   conversation_logs: true
   mcp_servers: true
+  config_changes: true
   statistics: true
-  health_checks: true
 ```
 
 ## 🔧 Usage Examples
 
 ```bash
 # Basic usage with default config
-./src/claude-monitor-enhanced.sh
+./src/claude-monitor.sh
 
 # Use custom configuration file
-./src/claude-monitor-enhanced.sh --config path/to/custom.yaml
+./src/claude-monitor.sh --config path/to/custom.yaml
 
 # Monitor with time filter
-./src/claude-monitor-enhanced.sh "2 hours ago"
+./src/claude-monitor.sh "2 hours ago"
 
 # Live monitoring only
-./src/claude-monitor-enhanced.sh live
+./src/claude-monitor.sh live
 
 # Monitor all historical data
-./src/claude-monitor-enhanced.sh all
+./src/claude-monitor.sh all
 ```
 
 ## 📊 Sample Output
@@ -119,12 +127,15 @@ Aeye automatically obfuscates sensitive information:
 ```
 aeye/
 ├── src/                    # Source code
-│   └── claude-monitor-enhanced.sh
-├── docs/                   # Documentation
-├── tests/                  # Test suite
+│   └── claude-monitor.sh   # Main monitoring script
+├── config/                 # Configuration files
+│   └── monitor.yaml        # YAML configuration
 ├── scripts/               # Installation and utility scripts
-├── config/                # Configuration files
-└── examples/              # Usage examples
+├── tests/                 # Test suite
+├── examples/              # Usage examples
+├── INSTALLATION.md        # Installation guide
+├── USAGE.md              # Usage documentation
+└── CONTRIBUTING.md       # Contributing guidelines
 ```
 
 ## 🤝 Contributing
