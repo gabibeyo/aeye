@@ -20,6 +20,18 @@ SHUTDOWN_TIMEOUT=""
 ENABLE_DATA_OBFUSCATION=""
 DEFAULT_HISTORY_FILTER=""
 
+# Color variables (loaded from YAML)
+RED=""
+GREEN=""
+YELLOW=""
+BLUE=""
+PURPLE=""
+CYAN=""
+WHITE=""
+GRAY=""
+BOLD=""
+NC=""
+
 # Function to load YAML configuration
 load_config() {
     local config_file="$1"
@@ -42,6 +54,18 @@ load_config() {
             ENABLE_DATA_OBFUSCATION=$(yq eval '.security.enable_data_obfuscation' "$config_file")
             DEFAULT_HISTORY_FILTER=$(yq eval '.display.default_history_filter' "$config_file")
             
+            # Load color configuration
+            RED=$(yq eval '.colors.red' "$config_file")
+            GREEN=$(yq eval '.colors.green' "$config_file")
+            YELLOW=$(yq eval '.colors.yellow' "$config_file")
+            BLUE=$(yq eval '.colors.blue' "$config_file")
+            PURPLE=$(yq eval '.colors.purple' "$config_file")
+            CYAN=$(yq eval '.colors.cyan' "$config_file")
+            WHITE=$(yq eval '.colors.white' "$config_file")
+            GRAY=$(yq eval '.colors.gray' "$config_file")
+            BOLD=$(yq eval '.colors.bold' "$config_file")
+            NC=$(yq eval '.colors.nc' "$config_file")
+            
             # Expand environment variables in paths
             CLAUDE_PROJECTS_DIR=$(eval echo "$CLAUDE_PROJECTS_DIR")
             CLAUDE_CONFIG_FILE=$(eval echo "$CLAUDE_CONFIG_FILE")
@@ -58,17 +82,7 @@ load_config() {
     fi
 }
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-PURPLE='\033[0;35m'
-CYAN='\033[0;36m'
-WHITE='\033[1;37m'
-GRAY='\033[0;90m'
-BOLD='\033[1m'
-NC='\033[0m' # No Color
+# Colors loaded from YAML configuration above
 
 # Function to print with timestamp and color
 log_event() {
@@ -561,9 +575,9 @@ main() {
     load_config "$config_file"
     
     # Validate configuration was loaded properly
-    if [[ -z "$CLAUDE_PROJECTS_DIR" ]] || [[ -z "$CLAUDE_CONFIG_FILE" ]]; then
-        echo -e "${RED}❌ Error: Configuration incomplete or invalid!${NC}"
-        echo -e "${YELLOW}Check that your YAML config has all required fields${NC}"
+    if [[ -z "$CLAUDE_PROJECTS_DIR" ]] || [[ -z "$CLAUDE_CONFIG_FILE" ]] || [[ -z "$RED" ]] || [[ -z "$NC" ]]; then
+        echo -e "\033[0;31m❌ Error: Configuration incomplete or invalid!\033[0m"
+        echo -e "\033[1;33mCheck that your YAML config has all required fields including colors\033[0m"
         exit 1
     fi
     
