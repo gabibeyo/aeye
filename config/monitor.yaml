@@ -1,0 +1,88 @@
+# Enhanced Claude Activity Monitor Configuration
+# YAML format for easier parsing and modern configuration management
+
+# Path configurations
+paths:
+  claude_projects_dir: "$HOME/.claude/projects"
+  claude_config_file: "$HOME/.claude.json"
+  mcp_cache_dir: "$HOME/Library/Caches/claude-cli-nodejs"
+  temp_dir: "/tmp"
+
+# Timing configurations (in seconds)
+timing:
+  claude_json_check_interval: 3
+  new_conversations_check_interval: 5
+  stats_update_interval: 60
+  main_health_check_interval: 5
+  health_log_interval_minutes: 2
+  shutdown_timeout: 2
+
+# Display configurations  
+display:
+  max_message_length: 0  # 0 = no truncation
+  default_history_filter: "24 hours ago"
+  show_full_text: true
+
+# Monitoring components (enable/disable)
+monitoring:
+  conversation_logs: true
+  mcp_servers: true
+  config_changes: true
+  statistics: true
+  new_files: true
+  health_checks: true
+
+# Security settings
+security:
+  enable_data_obfuscation: true
+  obfuscate:
+    api_keys: true
+    aws_keys: true
+    usernames: true
+    passwords: true
+    emails: true
+    ip_addresses: true
+  custom_username_to_obfuscate: ""
+
+# Logging settings
+logging:
+  log_health_checks: true
+  log_process_tracking: true
+  log_cleanup_details: true
+  cleanup_patterns:
+    tail_claude: "tail -f.*claude"
+    tail_mcp: "tail -f.*mcp-logs"
+    monitor_process: "claude-monitor-enhanced"
+
+# Performance settings
+performance:
+  max_background_processes: 100
+  enable_process_health_monitoring: true
+  recent_sessions_filter: "1 hour ago"
+
+# Feature flags
+features:
+  todo_detection: true
+  tool_usage_tracking: true
+  token_usage_tracking: true
+  model_tracking: true
+  session_summaries: true
+  color_output: true
+
+# Statistics collection
+statistics:
+  collect_conversation_count: true
+  collect_mcp_logs_count: true
+  collect_active_projects: true
+  collect_recent_sessions: true
+
+# Color customization (leave empty for defaults)
+colors:
+  red: ""
+  green: ""
+  yellow: ""
+  blue: ""
+  purple: ""
+  cyan: ""
+  white: ""
+  gray: ""

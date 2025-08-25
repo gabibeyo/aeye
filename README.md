@@ -37,22 +37,61 @@ chmod +x claude-monitor-enhanced.sh
 
 - **macOS** (Linux support coming soon)
 - **jq** - JSON processor (`brew install jq`)
+- **yq** - YAML processor (optional, for YAML config support: `brew install yq`)
 - **Claude Desktop** - The tool monitors Claude Desktop application logs
+
+## ⚙️ Configuration
+
+Aeye supports flexible configuration via YAML or .conf files. Configuration files are automatically detected:
+
+1. `--config` command line argument (highest priority)
+2. `config/monitor.yaml` (preferred format)
+3. `config/monitor.conf` (fallback format)
+
+### Configuration Options
+
+```yaml
+# Timing settings (seconds)
+timing:
+  claude_json_check_interval: 3    # Check claude.json changes
+  new_conversations_check_interval: 5    # Check for new conversations
+  stats_update_interval: 60        # Update statistics
+  main_health_check_interval: 5    # Health check frequency
+  
+# Security settings
+security:
+  enable_data_obfuscation: true
+  obfuscate:
+    api_keys: true
+    passwords: true
+    emails: true
+    ip_addresses: true
+    
+# Feature toggles
+monitoring:
+  conversation_logs: true
+  mcp_servers: true
+  statistics: true
+  health_checks: true
+```
 
 ## 🔧 Usage Examples
 
 ```bash
-# Monitor all historical data
-./claude-monitor-enhanced.sh all
+# Basic usage with default config
+./src/claude-monitor-enhanced.sh
 
-# Monitor from specific date
-./claude-monitor-enhanced.sh "2025-01-01"
+# Use custom configuration file
+./src/claude-monitor-enhanced.sh --config config/monitor.yaml
 
-# Monitor last week
-./claude-monitor-enhanced.sh "1 week ago"
+# Monitor with time filter
+./src/claude-monitor-enhanced.sh "2 hours ago"
 
 # Live monitoring only
-./claude-monitor-enhanced.sh live
+./src/claude-monitor-enhanced.sh live
+
+# Monitor all historical data
+./src/claude-monitor-enhanced.sh all
 ```
 
 ## 📊 Sample Output

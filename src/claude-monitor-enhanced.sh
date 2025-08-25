@@ -7,6 +7,62 @@
 # Global variables for process tracking
 declare -a BACKGROUND_PIDS=()
 
+# Configuration variables with defaults
+CLAUDE_PROJECTS_DIR="$HOME/.claude/projects"
+CLAUDE_CONFIG_FILE="$HOME/.claude.json"
+MCP_CACHE_DIR="$HOME/Library/Caches/claude-cli-nodejs"
+CLAUDE_JSON_CHECK_INTERVAL=3
+NEW_CONVERSATIONS_CHECK_INTERVAL=5
+STATS_UPDATE_INTERVAL=60
+MAIN_HEALTH_CHECK_INTERVAL=5
+HEALTH_LOG_INTERVAL_MINUTES=2
+SHUTDOWN_TIMEOUT=2
+ENABLE_DATA_OBFUSCATION=true
+DEFAULT_HISTORY_FILTER="24 hours ago"
+
+# Function to load configuration
+load_config() {
+    local config_file="$1"
+    
+    if [[ -f "$config_file" ]]; then
+        log_event "$CYAN" "⚙️" "Config" "Loading configuration from: $config_file"
+        
+        # Source the configuration file if it's a .conf file
+        if [[ "$config_file" == *.conf ]]; then
+            source "$config_file"
+            log_event "$GREEN" "✅" "Config" "Configuration loaded successfully"
+        elif [[ "$config_file" == *.yaml ]] || [[ "$config_file" == *.yml ]]; then
+            # Parse YAML using yq if available, otherwise skip
+            if command -v yq &> /dev/null; then
+                # Load key configuration values from YAML
+                CLAUDE_PROJECTS_DIR=$(yq eval '.paths.claude_projects_dir // env(HOME) + "/.claude/projects"' "$config_file")
+                CLAUDE_CONFIG_FILE=$(yq eval '.paths.claude_config_file // env(HOME) + "/.claude.json"' "$config_file")
+                MCP_CACHE_DIR=$(yq eval '.paths.mcp_cache_dir // env(HOME) + "/Library/Caches/claude-cli-nodejs"' "$config_file")
+                CLAUDE_JSON_CHECK_INTERVAL=$(yq eval '.timing.claude_json_check_interval // 3' "$config_file")
+                NEW_CONVERSATIONS_CHECK_INTERVAL=$(yq eval '.timing.new_conversations_check_interval // 5' "$config_file")
+                STATS_UPDATE_INTERVAL=$(yq eval '.timing.stats_update_interval // 60' "$config_file")
+                MAIN_HEALTH_CHECK_INTERVAL=$(yq eval '.timing.main_health_check_interval // 5' "$config_file")
+                HEALTH_LOG_INTERVAL_MINUTES=$(yq eval '.timing.health_log_interval_minutes // 2' "$config_file")
+                SHUTDOWN_TIMEOUT=$(yq eval '.timing.shutdown_timeout // 2' "$config_file")
+                ENABLE_DATA_OBFUSCATION=$(yq eval '.security.enable_data_obfuscation // true' "$config_file")
+                DEFAULT_HISTORY_FILTER=$(yq eval '.display.default_history_filter // "24 hours ago"' "$config_file")
+                
+                log_event "$GREEN" "✅" "Config" "YAML configuration loaded successfully"
+            else
+                log_event "$YELLOW" "⚠️" "Config" "yq not found, using default values for YAML config"
+            fi
+        fi
+        
+        # Expand environment variables in paths
+        CLAUDE_PROJECTS_DIR=$(eval echo "$CLAUDE_PROJECTS_DIR")
+        CLAUDE_CONFIG_FILE=$(eval echo "$CLAUDE_CONFIG_FILE")
+        MCP_CACHE_DIR=$(eval echo "$MCP_CACHE_DIR")
+        
+    else
+        log_event "$YELLOW" "⚠️" "Config" "Configuration file not found: $config_file, using defaults"
+    fi
+}
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -196,8 +252,8 @@ process_conversation_line() {
 
 # Function to show historical conversation data first, then monitor new events
 monitor_conversation_logs() {
-    local claude_projects="$HOME/.claude/projects"
-    local history_filter="$1"
+    local claude_projects="$CLAUDE_PROJECTS_DIR"
+    local history_filter="${1:-$DEFAULT_HISTORY_FILTER}"
     
     if [[ -d "$claude_projects" ]]; then
         if [[ "$history_filter" == "live" ]]; then
@@ -260,7 +316,7 @@ monitor_conversation_logs() {
 
 # Function to monitor MCP logs (enhanced from original)
 monitor_mcp_logs() {
-    local cache_dir="$HOME/Library/Caches/claude-cli-nodejs"
+    local cache_dir="$MCP_CACHE_DIR"
     
     if [[ -d "$cache_dir" ]]; then
         find "$cache_dir" -name "*.txt" -path "*/mcp-logs-*" | while read -r logfile; do
@@ -303,7 +359,7 @@ monitor_mcp_logs() {
 
 # Function to monitor .claude.json changes (enhanced)
 monitor_claude_json() {
-    local claude_json="$HOME/.claude.json"
+    local claude_json="$CLAUDE_CONFIG_FILE"
     
     if [[ -f "$claude_json" ]]; then
         (
@@ -315,7 +371,7 @@ monitor_claude_json() {
             local last_memory=$(jq -r '.memoryUsageCount // 0' "$claude_json" 2>/dev/null)
             
             while true; do
-                sleep 3
+                sleep $CLAUDE_JSON_CHECK_INTERVAL
                 if [[ -f "$claude_json" ]]; then
                     local current_startups=$(jq -r '.numStartups // 0' "$claude_json" 2>/dev/null)
                     local current_queue=$(jq -r '.promptQueueUseCount // 0' "$claude_json" 2>/dev/null)
@@ -352,14 +408,14 @@ monitor_new_conversation_files() {
         # Set up signal handling in subshell
         trap 'exit 0' SIGTERM SIGINT
         
-        local projects_dir="$HOME/.claude/projects"
+        local projects_dir="$CLAUDE_PROJECTS_DIR"
         local monitored_files="/tmp/claude_monitored_files_$$"
         
         # Create a list of currently monitored files
         find "$projects_dir" -name "*.jsonl" -type f 2>/dev/null > "$monitored_files"
         
         while true; do
-            sleep 5
+            sleep $NEW_CONVERSATIONS_CHECK_INTERVAL
             
             # Find all current conversation files
             find "$projects_dir" -name "*.jsonl" -type f 2>/dev/null | while read -r logfile; do
@@ -422,25 +478,25 @@ show_enhanced_stats() {
         trap 'exit 0' SIGTERM SIGINT
         
         while true; do
-            sleep 60  # Update every minute
+            sleep $STATS_UPDATE_INTERVAL
             
             local conversation_count=0
             local mcp_logs_count=0
             local active_projects=0
             
-            if [[ -d "$HOME/.claude/projects" ]]; then
-                conversation_count=$(find "$HOME/.claude/projects" -name "*.jsonl" | wc -l)
+            if [[ -d "$CLAUDE_PROJECTS_DIR" ]]; then
+                conversation_count=$(find "$CLAUDE_PROJECTS_DIR" -name "*.jsonl" | wc -l)
             fi
             
-            if [[ -d "$HOME/Library/Caches/claude-cli-nodejs" ]]; then
-                mcp_logs_count=$(find "$HOME/Library/Caches/claude-cli-nodejs" -name "*.txt" -path "*/mcp-logs-*" | wc -l)
+            if [[ -d "$MCP_CACHE_DIR" ]]; then
+                mcp_logs_count=$(find "$MCP_CACHE_DIR" -name "*.txt" -path "*/mcp-logs-*" | wc -l)
             fi
             
-            if [[ -f "$HOME/.claude.json" ]]; then
-                active_projects=$(jq -r '.projects | length // 0' "$HOME/.claude.json" 2>/dev/null)
+            if [[ -f "$CLAUDE_CONFIG_FILE" ]]; then
+                active_projects=$(jq -r '.projects | length // 0' "$CLAUDE_CONFIG_FILE" 2>/dev/null)
             fi
             
-            local current_sessions=$(find "$HOME/.claude/projects" -name "*.jsonl" -newermt "1 hour ago" 2>/dev/null | wc -l)
+            local current_sessions=$(find "$CLAUDE_PROJECTS_DIR" -name "*.jsonl" -newermt "1 hour ago" 2>/dev/null | wc -l)
             
             log_event "$WHITE" "📈" "Stats" "Conversations: $conversation_count, MCP logs: $mcp_logs_count, Projects: $active_projects, Recent: $current_sessions"
         done
@@ -465,7 +521,7 @@ cleanup() {
     done
     
     # Give processes time to exit gracefully
-    sleep 2
+    sleep $SHUTDOWN_TIMEOUT
     
     # Force kill any remaining processes
     for pid in "${BACKGROUND_PIDS[@]}"; do
@@ -489,6 +545,23 @@ cleanup() {
 
 # Main function
 main() {
+    # Load configuration first
+    local config_file=""
+    
+    # Check for configuration file argument or use defaults
+    if [[ "$1" == "--config" && -n "$2" ]]; then
+        config_file="$2"
+        shift 2
+    elif [[ -f "$(dirname "${BASH_SOURCE[0]}")/../config/monitor.yaml" ]]; then
+        config_file="$(dirname "${BASH_SOURCE[0]}")/../config/monitor.yaml"
+    elif [[ -f "$(dirname "${BASH_SOURCE[0]}")/../config/monitor.conf" ]]; then
+        config_file="$(dirname "${BASH_SOURCE[0]}")/../config/monitor.conf"
+    fi
+    
+    if [[ -n "$config_file" ]]; then
+        load_config "$config_file"
+    fi
+    
     # Check dependencies
     if ! command -v jq &> /dev/null; then
         echo -e "${RED}Error: jq is required but not installed. Install with: brew install jq${NC}"
@@ -514,8 +587,8 @@ main() {
     log_event "$BLUE" "🔧" "Monitor" "Monitoring MCP server logs"
     log_event "$YELLOW" "⚙️" "Monitor" "Monitoring configuration changes"
     
-    # Start all monitoring functions in background
-    monitor_conversation_logs "${1:-24 hours ago}"
+    # Start all monitoring functions in background  
+    monitor_conversation_logs "${1:-$DEFAULT_HISTORY_FILTER}"
     monitor_mcp_logs
     monitor_claude_json
     show_enhanced_stats
@@ -526,7 +599,7 @@ main() {
     
     # Keep the script running and responsive to signals
     while true; do
-        sleep 5
+        sleep $MAIN_HEALTH_CHECK_INTERVAL
         
         # Check process health
         local alive_count=0
@@ -542,7 +615,7 @@ main() {
         if (( seconds == 0 )); then
             local minutes=$(date +%M)
             minutes=${minutes#0}
-            if (( minutes % 2 == 0 )); then
+            if (( minutes % HEALTH_LOG_INTERVAL_MINUTES == 0 )); then
                 log_event "$CYAN" "💓" "Health" "$alive_count/${#BACKGROUND_PIDS[@]} processes running"
             fi
         fi
