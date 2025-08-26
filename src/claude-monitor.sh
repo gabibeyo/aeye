@@ -84,6 +84,24 @@ load_config() {
 
 # Colors loaded from YAML configuration above
 
+# Function to format messages for better readability
+format_message() {
+    local message="$1"
+    local source="$2"
+    
+    # Simply convert \n to actual newlines
+    echo "$message" | sed 's/\\n/\n/g'
+}
+
+# Function to add visual separator for new sessions
+add_session_separator() {
+    local session_name="$1"
+    echo ""
+    echo -e "${CYAN}────────────────────────────────────────────────────────────────────${NC}"
+    echo -e "${CYAN}📝 Session: ${BOLD}$session_name${NC}"
+    echo -e "${CYAN}────────────────────────────────────────────────────────────────────${NC}"
+}
+
 # Function to print with timestamp and color
 log_event() {
     local color=$1
@@ -120,7 +138,18 @@ log_event() {
         clean_message=$(echo "$clean_message" | sed -E 's/[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/***IP_ADDRESS***/g')
     fi
     
-    printf "${GRAY}[%s]${NC} %s ${color}%s${NC} %s\n" "$timestamp" "$icon" "$source" "$clean_message"
+    # Format the message for better readability
+    local formatted_message=$(format_message "$clean_message" "$source")
+    
+    # Use echo instead of printf to properly handle multi-line formatted messages
+    echo -e "${GRAY}[${timestamp}]${NC} ${icon} ${color}${source}${NC} ${formatted_message}"
+    
+    # Add extra spacing for certain event types for better readability
+    case "$source" in
+        User:*|Claude:*|Summary:*)
+            echo ""
+            ;;
+    esac
 }
 
 # Function to truncate long text (disabled - show full text)
@@ -145,19 +174,21 @@ extract_todos() {
     
     # Check if this is a TodoWrite tool use
     local tool_name=$(echo "$json" | jq -r '.message.content[]? | select(.type == "tool_use") | .name' 2>/dev/null)
-    if [[ "$tool_name" == "TodoWrite" ]]; then
+    if [[ "$tool_name" == "TodoWrite" || "$tool_name" == "todo_write" ]]; then
         # Extract the todos array
-        local todos=$(echo "$json" | jq -r '.message.content[]? | select(.type == "tool_use" and .name == "TodoWrite") | .input.todos' 2>/dev/null)
+        local todos=$(echo "$json" | jq -r '.message.content[]? | select(.type == "tool_use" and (.name == "TodoWrite" or .name == "todo_write")) | .input.todos' 2>/dev/null)
         if [[ -n "$todos" && "$todos" != "null" ]]; then
+            echo -e "${BOLD}${YELLOW}📋 TODO MANAGEMENT:${NC}"
+            
             # Parse each todo item
-            echo "$todos" | jq -r '.[] | "  \(.status | ascii_upcase) [\(.priority)] \(.content)"' 2>/dev/null | while read -r todo_line; do
-                if [[ -n "$todo_line" ]]; then
+            echo "$todos" | jq -r '.[] | "\(.status)|\(.content)|\(.id // "N/A")"' 2>/dev/null | while IFS='|' read -r status content todo_id; do
+                if [[ -n "$status" && -n "$content" ]]; then
                     # Color code by status
-                    local status=$(echo "$todo_line" | grep -oE '(PENDING|IN_PROGRESS|COMPLETED)')
                     local todo_color="$GRAY"
                     local todo_icon="⚪"
+                    local status_upper=$(echo "$status" | tr '[:lower:]' '[:upper:]')
                     
-                    case "$status" in
+                    case "$status_upper" in
                         "PENDING")
                             todo_color="$YELLOW"
                             todo_icon="⏳"
@@ -170,9 +201,13 @@ extract_todos() {
                             todo_color="$GREEN"
                             todo_icon="✅"
                             ;;
+                        "CANCELLED")
+                            todo_color="$RED"
+                            todo_icon="❌"
+                            ;;
                     esac
                     
-                    log_event "$todo_color" "$todo_icon" "Todo:$session_short" "$todo_line"
+                    log_event "$todo_color" "$todo_icon" "Todo:$session_short" "[$status_upper] $content"
                 fi
             done
         fi
@@ -191,11 +226,20 @@ print_header() {
     echo ""
 }
 
+# Global variable to track current session for separators
+CURRENT_SESSION=""
+
 # Function to process conversation line
 process_conversation_line() {
     local line="$1"
     local filename="$2"
     local session_short="$3"
+    
+    # Add session separator when switching to a new session
+    if [[ "$CURRENT_SESSION" != "$session_short" ]]; then
+        CURRENT_SESSION="$session_short"
+        add_session_separator "$session_short"
+    fi
     
     if [[ -n "$line" && "$line" == *"{"* ]]; then
         # Try to parse the JSON line
@@ -211,7 +255,8 @@ process_conversation_line() {
                     # Extract user prompt
                     local user_content=$(echo "$line" | jq -r '.message.content // empty' 2>/dev/null)
                     if [[ -n "$user_content" ]]; then
-                        log_event "$GREEN" "💬" "User:$session_short" "\"$user_content\""
+                        echo -e "${BOLD}${GREEN}▶ USER PROMPT:${NC}"
+                        log_event "$GREEN" "💬" "User:$session_short" "$user_content"
                     fi
                     ;;
                 "assistant")
@@ -220,24 +265,37 @@ process_conversation_line() {
                     local text_content=$(echo "$line" | jq -r '.message.content[]? | select(.type == "text") | .text' 2>/dev/null)
                     
                     if [[ -n "$tool_uses" ]]; then
+                        echo -e "${BOLD}${BLUE}🔧 TOOL USAGE:${NC}"
                         for tool in $tool_uses; do
                             local tool_input=$(echo "$line" | jq -r ".message.content[]? | select(.type == \"tool_use\" and .name == \"$tool\") | .input" 2>/dev/null)
-                            log_event "$BLUE" "🔧" "Tool:$session_short" "$tool $tool_input"
+                            # Format tool input as pretty JSON
+                            local formatted_input=""
+                            if echo "$tool_input" | jq . >/dev/null 2>&1; then
+                                formatted_input=$(echo "$tool_input" | jq -r '.' 2>/dev/null)
+                            else
+                                formatted_input="$tool_input"
+                            fi
+                            log_event "$BLUE" "🔧" "Tool:$session_short" "$tool"
+                            if [[ -n "$formatted_input" && "$formatted_input" != "null" ]]; then
+                                echo -e "${GRAY}    Parameters: ${BLUE}$formatted_input${NC}"
+                            fi
                         done
                     elif [[ -n "$text_content" ]]; then
-                        log_event "$PURPLE" "🤖" "Claude:$session_short" "\"$text_content\""
+                        echo -e "${BOLD}${PURPLE}🤖 CLAUDE RESPONSE:${NC}"
+                        log_event "$PURPLE" "🤖" "Claude:$session_short" "$text_content"
                     fi
                     
                     # Check for usage statistics
                     local input_tokens=$(extract_json_field "$line" "message.usage.input_tokens")
                     local output_tokens=$(extract_json_field "$line" "message.usage.output_tokens")
                     if [[ -n "$input_tokens" && -n "$output_tokens" ]]; then
-                        log_event "$CYAN" "📊" "Usage:$session_short" "In: $input_tokens tokens, Out: $output_tokens tokens, Model: $model"
+                        log_event "$CYAN" "📊" "Usage:$session_short" "Tokens → In: $input_tokens | Out: $output_tokens | Model: $model"
                     fi
                     ;;
                 "summary")
                     local summary=$(extract_json_field "$line" "summary")
                     if [[ -n "$summary" ]]; then
+                        echo -e "${BOLD}${YELLOW}📄 SESSION SUMMARY:${NC}"
                         log_event "$YELLOW" "📄" "Summary:$session_short" "$summary"
                     fi
                     ;;
@@ -255,10 +313,8 @@ process_conversation_line() {
                 fi
             fi
             
-            # Look for todo-related activities
-            if echo "$line" | grep -qi "todo\|task\|TodoWrite"; then
-                log_event "$YELLOW" "✅" "Todo:$session_short" "Todo activity detected"
-            fi
+            # Extract todos with better formatting
+            extract_todos "$line" "$session_short"
         fi
     fi
 }
