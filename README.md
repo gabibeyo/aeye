@@ -575,6 +575,3 @@ If you encounter issues:
 - [ ] Performance analytics
 - [ ] Configuration management UI
 
----
-
-**Made with ❤️ for the Claude community**
