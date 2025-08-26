@@ -34,14 +34,14 @@ monitoring:
 
 # Security settings
 security:
-  enable_data_obfuscation: true
+  enable_data_obfuscation: false
   obfuscate:
-    api_keys: true
-    aws_keys: true
-    usernames: true
-    passwords: true
-    emails: true
-    ip_addresses: true
+    api_keys: false
+    aws_keys: false
+    usernames: false
+    passwords: false
+    emails: false
+    ip_addresses: false
   custom_username_to_obfuscate: ""
 
 # Logging settings

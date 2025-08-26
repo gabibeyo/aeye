@@ -91,30 +91,34 @@ log_event() {
     local source=$3
     local message=$4
     local timestamp=$(date '+%H:%M:%S')
-    # Obfuscate sensitive data in message
+    # Handle sensitive data based on configuration
     local clean_message="$message"
     
-    # Obfuscate API keys (sk-*, ghp_*, etc.)
-    clean_message=$(echo "$clean_message" | sed -E 's/(sk-[a-zA-Z0-9_-]+)/sk-***REDACTED***/g')
-    clean_message=$(echo "$clean_message" | sed -E 's/(ghp_[a-zA-Z0-9_-]+)/ghp_***REDACTED***/g')
-    clean_message=$(echo "$clean_message" | sed -E 's/(sk-ant-[a-zA-Z0-9_-]+)/sk-ant-***REDACTED***/g')
+    # Only obfuscate if enabled in configuration
+    if [[ "$ENABLE_DATA_OBFUSCATION" == "true" ]]; then
     
-    # Obfuscate AWS keys
-    clean_message=$(echo "$clean_message" | sed -E 's/(AKIA[A-Z0-9]+)/AKIA***REDACTED***/g')
-    clean_message=$(echo "$clean_message" | sed -E 's/([A-Za-z0-9/+=]{40})/***REDACTED_SECRET***/g')
+        # Obfuscate API keys (sk-*, ghp_*, etc.)
+        clean_message=$(echo "$clean_message" | sed -E 's/(sk-[a-zA-Z0-9_-]+)/sk-***REDACTED***/g')
+        clean_message=$(echo "$clean_message" | sed -E 's/(ghp_[a-zA-Z0-9_-]+)/ghp_***REDACTED***/g')
+        clean_message=$(echo "$clean_message" | sed -E 's/(sk-ant-[a-zA-Z0-9_-]+)/sk-ant-***REDACTED***/g')
     
-    # Obfuscate usernames in paths
-    clean_message=$(echo "$clean_message" | sed -E 's/\/Users\/[^\/]+/\/Users\/***USER***/g')
-    clean_message=$(echo "$clean_message" | sed -E 's/gabrielbeyo/***USER***/g')
+        # Obfuscate AWS keys
+        clean_message=$(echo "$clean_message" | sed -E 's/(AKIA[A-Z0-9]+)/AKIA***REDACTED***/g')
+        clean_message=$(echo "$clean_message" | sed -E 's/([A-Za-z0-9/+=]{40})/***REDACTED_SECRET***/g')
     
-    # Obfuscate passwords
-    clean_message=$(echo "$clean_message" | sed -E 's/(pass[word]*[[:space:]]*[:=][[:space:]]*)[^[:space:]]+/\1***REDACTED***/gi')
+        # Obfuscate usernames in paths
+        clean_message=$(echo "$clean_message" | sed -E 's/\/Users\/[^\/]+/\/Users\/***USER***/g')
+        clean_message=$(echo "$clean_message" | sed -E 's/gabrielbeyo/***USER***/g')
     
-    # Obfuscate email addresses
-    clean_message=$(echo "$clean_message" | sed -E 's/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/***EMAIL***@***DOMAIN***/g')
+        # Obfuscate passwords
+        clean_message=$(echo "$clean_message" | sed -E 's/(pass[word]*[[:space:]]*[:=][[:space:]]*)[^[:space:]]+/\1***REDACTED***/gi')
     
-    # Obfuscate IP addresses
-    clean_message=$(echo "$clean_message" | sed -E 's/[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/***IP_ADDRESS***/g')
+        # Obfuscate email addresses
+        clean_message=$(echo "$clean_message" | sed -E 's/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/***EMAIL***@***DOMAIN***/g')
+    
+        # Obfuscate IP addresses
+        clean_message=$(echo "$clean_message" | sed -E 's/[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/***IP_ADDRESS***/g')
+    fi
     
     printf "${GRAY}[%s]${NC} %s ${color}%s${NC} %s\n" "$timestamp" "$icon" "$source" "$clean_message"
 }

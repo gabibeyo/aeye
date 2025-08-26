@@ -497,13 +497,24 @@ Aeye uses a clean separation of concerns with two main components:
 
 ## 🛡️ Privacy & Security
 
-Aeye automatically obfuscates sensitive information:
+Aeye can automatically obfuscate sensitive information when `enable_data_obfuscation: true` in the configuration:
 - API keys (sk-*, ghp-*, sk-ant-*)
 - AWS credentials
 - Passwords and secrets
 - Email addresses
 - IP addresses
 - User paths and names
+
+### Disabling Data Obfuscation
+
+To see raw, unobfuscated data (useful for debugging), set in your configuration:
+
+```yaml
+security:
+  enable_data_obfuscation: false
+```
+
+**Note:** When disabled, sensitive data like API keys and passwords will be displayed in plain text. Use with caution.
 
 ## 📁 Project Structure
 
