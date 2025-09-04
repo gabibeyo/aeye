@@ -240,7 +240,6 @@ download_aeye() {
     # Download documentation
     log "$YELLOW" "📚" "Downloading documentation..."
     curl -fsSL "$AEYE_RAW_BASE/README.md" -o "$AEYE_DIR/README.md"
-    curl -fsSL "$AEYE_RAW_BASE/USAGE.md" -o "$AEYE_DIR/USAGE.md"
     
     log "$GREEN" "✅" "Aeye files downloaded successfully"
 }
@@ -442,7 +441,6 @@ print_success() {
     echo ""
     log "$BLUE" "📚" "Documentation:"
     log "$WHITE" "   " "cat ~/.aeye/README.md    # Full documentation"
-    log "$WHITE" "   " "cat ~/.aeye/USAGE.md     # Usage examples"
     echo ""
     log "$YELLOW" "💡" "Configuration:"
     log "$WHITE" "   " "aeye config          # Edit configuration"
